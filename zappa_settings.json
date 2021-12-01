@@ -1,0 +1,15 @@
+{
+    "dev": {
+        "app_function": "app.app",
+        "aws_region": "eu-west-3",
+        "profile_name": "softlab",
+        "project_name": "softlab-cloud-engineering",
+        "runtime": "python3.8",
+        "s3_bucket": "softlab-cloudeng-apis-bucket",
+        "slim_handler": true,
+        "xray_tracing": true,
+        "cloudwatch_log_level": "INFO",
+        "cloudwatch_data_trace": true,
+        "cloudwatch_metrics_enabled": true
+    }
+}
