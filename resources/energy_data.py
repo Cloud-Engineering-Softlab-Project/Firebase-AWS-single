@@ -1,5 +1,8 @@
+import datetime
+
 from flask import request, jsonify
 from flask_restx import Resource, fields, abort
+from random import randrange
 
 import configuration
 from modules import firestore
@@ -14,9 +17,11 @@ class EnergyData(Resource):
         zone_codes = payload['zone_codes']
         date_from = payload['date_from']
         duration = payload['duration']
+        join = payload['duration']
+        light = payload['light']
 
         # Get data
-        data = firestore.query_energy_data(zone_codes, date_from, duration, payload['join'], payload['light'])
+        data = firestore.query_energy_data(zone_codes, date_from, duration, join, light)
 
         # Make them JSON serializable
         for i in range(len(data)):
@@ -38,4 +43,108 @@ class EnergyData(Resource):
             'parameters': payload,
             'len_of_data': len(data),
             'data': data
+        }
+
+class ReferenceZones(Resource):
+
+    @configuration.measure_time
+    def get(self):
+
+        # Get query parameters
+        time_added = request.args.get('time_added', default=None, type=str)
+        country_fk = request.args.get('country_fk', default=None, type=str)
+        ref_zone_id = request.args.get('ref_zone_id', default=None, type=str)
+
+        # Get data
+        data = firestore.query_ref_zones(time_added, country_fk, ref_zone_id)
+
+        # Make them JSON serializable
+        for i in range(len(data)):
+            doc = data[i]
+
+            # Refactor datetime from str to date-objects
+            datetime_keys = ['AreaRefAddedOn']
+            for key in datetime_keys:
+                if key in doc.keys():
+                    data[i][key] = str(doc[key])
+
+        return {
+            'times': configuration.times,
+            'len_of_data': len(data),
+            'data': data
+        }
+
+    @configuration.measure_time
+    def post(self):
+
+        # Get query parameters
+        ref_zone_id = request.args.get('ref_zone_id', default=None, type=str)
+
+        # Generate ref_zone_id
+        if ref_zone_id is None:
+            ref_zone_id = str(randrange(410, 1000))
+
+        # Check ID
+        doc = configuration.db.collection('reference_zones').document(ref_zone_id).get()
+        if doc.exists:
+            abort(400, f"Reference Zone with ID {ref_zone_id} already exists.", statusCode=400)
+
+        # Write dummy document
+        else:
+            new_doc = {
+                "AreaRefAbbrev": "GREEK TESTING",
+                "Country_FK": randrange(50, 100),
+                "Id": int(ref_zone_id),
+                "eicFunctionName_FK": None,
+                "AreaTypeCode_FK": randrange(0, 100),
+                "AreaRefAddedOn": datetime.datetime.now(),
+                "MapCode_FK": randrange(0, 100),
+                "AreaRefName": "[NEW] /GREEK",
+                "AreaCode_eic_FK": None
+            }
+            configuration.db.collection('reference_zones').document(ref_zone_id).set(new_doc)
+
+            return {
+                "times": configuration.times,
+                "ref_zone_id": ref_zone_id
+            }
+
+    @configuration.measure_time
+    def delete(self):
+
+        # Get query parameters
+        ref_zone_id = request.args.get('ref_zone_id', default=None, type=str)
+
+        # Generate ref_zone_id
+        if ref_zone_id is None:
+            ref_zone_id = str(randrange(100, 1000))
+
+        # Check ID
+        doc = configuration.db.collection('reference_zones').document(ref_zone_id).get()
+        if not doc.exists:
+            abort(400, f"Reference Zone with ID {ref_zone_id} does not exist.", statusCode=400)
+        else:
+            if doc.to_dict()['AreaRefAbbrev'] != "GREEK TESTING":
+                abort(400, f"Reference Zone with ID {ref_zone_id} cannot be deleted.", statusCode=400)
+
+        # Delete document
+        configuration.db.collection('reference_zones').document(ref_zone_id).delete()
+
+        return {
+            "times": configuration.times,
+            "ref_zone_id": ref_zone_id
+        }
+
+import time
+class Sleep(Resource):
+
+    def get(self, sleep_id):
+
+        a = 0
+        for i in range(3000):
+            for j in range(10000):
+                a += i * j
+
+        return {
+            'msg': sleep_id
         }
