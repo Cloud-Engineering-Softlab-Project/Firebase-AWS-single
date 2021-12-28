@@ -12,12 +12,15 @@ class EnergyData(Resource):
     @configuration.measure_time
     def post(self):
 
+        # Initialize global times keeper
+        configuration.times = {}
+
         # Get parameters
         payload = request.json
         zone_codes = payload['zone_codes']
         date_from = payload['date_from']
         duration = payload['duration']
-        join = payload['duration']
+        join = payload['join']
         light = payload['light']
 
         # Get data
@@ -45,10 +48,51 @@ class EnergyData(Resource):
             'data': data
         }
 
+    @configuration.measure_time
+    def get(self):
+
+        # Initialize global times keeper
+        configuration.times = {}
+
+        # Get query parameters
+        zone_code = request.args.get('zone_code', default=None, type=str)
+        date_from = request.args.get('date_from', default='01-10-2020', type=str)
+        duration = request.args.get('duration', default='10', type=str)
+
+        if zone_code is None:
+            abort(400, f"Zone Code needed.", statusCode=400)
+
+        # Get data
+        data = firestore.query_energy_data([int(zone_code)], date_from, int(duration), False, True)
+
+        # Make them JSON serializable
+        for i in range(len(data)):
+            doc = data[i]
+
+            # Refactor datetime from str to date-objects
+            datetime_keys = ['EntityCreatedAt', 'EntityModifiedAt', 'DateTime', 'UpdateTime']
+            for key in datetime_keys:
+                if key in doc.keys():
+                    data[i][key] = str(doc[key])
+
+        return {
+            'times': configuration.times,
+            'parameters': {
+                'zone_code': zone_code,
+                'date_from': date_from,
+                'duration': duration
+            },
+            'len_of_data': len(data),
+            'data': data
+        }
+
 class ReferenceZones(Resource):
 
     @configuration.measure_time
     def get(self):
+
+        # Initialize global times keeper
+        configuration.times = {}
 
         # Get query parameters
         time_added = request.args.get('time_added', default=None, type=str)
@@ -76,6 +120,9 @@ class ReferenceZones(Resource):
 
     @configuration.measure_time
     def post(self):
+
+        # Initialize global times keeper
+        configuration.times = {}
 
         # Get query parameters
         ref_zone_id = request.args.get('ref_zone_id', default=None, type=str)
@@ -112,6 +159,9 @@ class ReferenceZones(Resource):
     @configuration.measure_time
     def delete(self):
 
+        # Initialize global times keeper
+        configuration.times = {}
+
         # Get query parameters
         ref_zone_id = request.args.get('ref_zone_id', default=None, type=str)
 
@@ -133,18 +183,4 @@ class ReferenceZones(Resource):
         return {
             "times": configuration.times,
             "ref_zone_id": ref_zone_id
-        }
-
-import time
-class Sleep(Resource):
-
-    def get(self, sleep_id):
-
-        a = 0
-        for i in range(3000):
-            for j in range(10000):
-                a += i * j
-
-        return {
-            'msg': sleep_id
         }

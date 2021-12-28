@@ -1,8 +1,9 @@
 import datetime
 import configuration
 
-
+@configuration.measure_time
 def query_energy_data(zone_code: [int], date_from: str, duration: int, join: bool, light: bool) -> [dict]:
+
     # Initialize dicts which will be used for join
     reference_zones = {}
     resolution_codes = {}
@@ -54,7 +55,7 @@ def query_energy_data(zone_code: [int], date_from: str, duration: int, join: boo
 
     return final
 
-
+@configuration.measure_time
 def query_ref_zones(time_added: str, country_fk: str, ref_zone_id: str) -> [dict]:
 
     # Refactor DateTimes from string to date object
