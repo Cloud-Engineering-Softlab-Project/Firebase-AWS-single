@@ -14,7 +14,7 @@ def measure_time(func):
         end = time.time()
 
         times[func.__name__] = end - start
-        # print(func.__name__, end - start)
+
         return result
 
     return wrap
@@ -26,7 +26,7 @@ def init():
 
     # Read ServiceAccount.json from S3
     s3 = boto3.resource('s3', 'eu-west-3')
-    json_object = s3.Object('softlab-credentials', 'cloud-engineering-974ea-firebase-adminsdk-p2jkd-d073c8db95.json').get()['Body'].read().decode('utf-8')
+    json_object = s3.Object('softlab-cloud-credentials', 'cloud-engineering-974ea-firebase-adminsdk-p2jkd-d073c8db95.json').get()['Body'].read().decode('utf-8')
     json_content = json.loads(json_object)
 
     # Initialize firestore

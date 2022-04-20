@@ -62,7 +62,7 @@ def query_ref_zones(time_added: str, country_fk: str, ref_zone_id: str) -> [dict
     if time_added:
         time_added_obj = datetime.datetime.strptime(time_added, '%d-%m-%Y')
 
-    country_fk = country_fk = int(country_fk) if country_fk else None
+    country_fk = int(country_fk) if country_fk else None
 
     # Get ref_zone with specific ID
     if ref_zone_id:

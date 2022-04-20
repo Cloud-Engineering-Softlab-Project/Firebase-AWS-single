@@ -38,3 +38,4 @@ class SoftSleep(Resource):
             'times': configuration.times,
             'msg': sleep_id
         }
+
